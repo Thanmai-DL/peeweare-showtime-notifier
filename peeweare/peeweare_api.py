@@ -1,0 +1,118 @@
+import logging
+
+from peeweare.exception import PeeweareException
+from peeweare.models import CinemaMovieSession, MoviesShowing, Showtime
+from peeweare.rest_adapter import RestAdapter
+
+
+class PeeweareAPI:
+    def __init__(
+        self,
+        hostname: str = "api3.pvrcinemas.com",
+        ver: str = "v1",
+        ssl_verify: bool = True,
+        logger: logging.Logger | None = None,
+    ):
+        """
+        Initialize the PeeweareAPI client.
+        """
+        self._rest_adapter = RestAdapter(hostname, ver, ssl_verify, logger)
+        self._logger = logger or logging.getLogger(__name__)
+
+    async def _showing(self, endpoint: str, key: str) -> list[MoviesShowing]:
+        """
+        Fetch the list of movies from the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to fetch movies from.
+            key (str): The key to extract the movie list from the response.
+
+        Returns:
+            List[MoviesShowing]: The list of showing movies.
+        """
+        response = await self._rest_adapter.post(endpoint)
+        try:
+            data = response.data["output"][key]
+        except Exception as e:
+            self._logger.error(msg=str(e))
+            raise PeeweareException(
+                f"Error fetching movies from {endpoint}: {e}"
+            ) from e
+        return [MoviesShowing(**movie) for movie in data]
+
+    async def nowshowing(self) -> list[MoviesShowing]:
+        """
+        Fetch the list of currently showing movies.
+
+        Returns:
+            List[MoviesShowing]: The list of currently showing movies.
+        """
+        return await self._showing("/nowshowing", "mv")
+
+    async def comingsoon(self) -> list[MoviesShowing]:
+        """
+        Fetch the list of upcoming movies.
+
+        Returns:
+            List[MoviesShowing]: The list of upcoming movies.
+        """
+        return await self._showing("/comingsoon", "movies")
+
+    async def all_movies(self) -> list[MoviesShowing]:
+        """
+        Fetch the list of all movies (currently showing and upcoming).
+
+        Returns:
+            List[MoviesShowing]: The combined list of currently showing and upcoming movies.
+        """
+        now_showing = await self.nowshowing()
+        coming_soon = await self.comingsoon()
+        return now_showing + coming_soon
+
+    async def showtimes(
+        self, movie_id: str, theater_id: str, date: str
+    ) -> Showtime | None:
+        """
+        Fetch the showtimes for a specific movie at a specific theater on a given date.
+
+        Args:
+            movie_id (str): The ID of the movie.
+            theater_id (str): The ID of the theater.
+            date (str): The date for which to fetch showtimes (format: YYYY-MM-DD).
+
+        Returns:
+            Showtime | None: An object containing the showtimes for the specified movie, or None if the fetch fails.
+        """
+
+        self.movie_id = movie_id
+        showtimes = Showtime(shows={})
+
+        response = await self._rest_adapter.post(
+            "/csessions", {"cid": theater_id, "dated": date}
+        )
+        if response.data["result"] == "success":
+            try:
+                data = response.data["output"]["cinemaMovieSessions"]
+            except TypeError:
+                self._logger.error(
+                    msg="Showtime data is not available: 'output' or 'cinemaMovieSessions' key not found"
+                )
+                return None
+            except Exception as e:
+                self._logger.error(msg=str(e))
+                raise PeeweareException(
+                    f"Error fetching showtimes for movie {movie_id}: {e}"
+                ) from e
+            for session in data:
+                showtime = CinemaMovieSession(**session)
+                if str(showtime.movieRe.id) == movie_id:
+                    for exp_session in showtime.experienceSessions:
+                        showtimes.shows[exp_session.experience] = [
+                            f"{show.showTime} ({show.language})"
+                            for show in exp_session.shows
+                        ]
+            return showtimes
+        else:
+            raise PeeweareException(
+                f"Failed to fetch showtimes due to API result: {response.data.get('result', 'Unknown error')}"
+            )
