@@ -2,10 +2,11 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from pymongo import AsyncMongoClient
+from pymongo import AsyncMongoClient, MongoClient
 
 from backend.dependencies import bg_assets
 from backend.exceptions import PeeweareAppException
@@ -54,7 +55,12 @@ async def lifespan(app: FastAPI):
 
     # Initialize the scheduler and add the MongoDB job store
     scheduler = AsyncIOScheduler()
-    scheduler.add_jobstore("mongodb", collection="jobstore", database="peeweare")
+    jobstore = MongoDBJobStore(
+        client=MongoClient(os.environ["MONGODB_URL"]),
+        database="peeweare",
+        collection="jobstore",
+    )
+    scheduler.add_jobstore(jobstore)
     scheduler.start()
     app.state.scheduler = scheduler
 
