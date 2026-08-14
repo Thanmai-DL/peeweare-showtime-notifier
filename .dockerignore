@@ -1,0 +1,22 @@
+# Version Control
+.git
+.gitignore
+.github
+
+# Virtual Environment
+.venv
+
+# Containerization
+Dockerfile
+docker-compose.yml
+
+# Directories
+docs
+results
+tests
+
+# Files
+.env
+pyproject.toml
+README.md
+uv.lock
