@@ -1,0 +1,32 @@
+name: peeweare-showtime-notifier
+services:
+    mongodb:
+        container_name: mongodb
+        image: mongodb/mongodb-community-server:latest-slim
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb_data:/data/db
+            - mongodb_config:/data/configdb
+    peeweare-showtime-notifier:
+        container_name: peeweare-showtime-notifier
+        image: ghcr.io/Thanmai-DL/peeweare-showtime-notifier
+        restart: unless-stopped
+        environment:
+            - MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017
+            - NTFY_URL=${NTFY_URL}
+            - NTFY_TOKEN=${NTFY_TOKEN}
+            - JOB_INTERVAL_SECONDS=${JOB_INTERVAL_SECONDS}
+        ports:
+            - "8000:80"
+        depends_on:
+            - mongodb
+volumes:
+    mongodb_data:
+        name: mongodb_data
+    mongodb_config:
+        name: mongodb_config
