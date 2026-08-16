@@ -37,7 +37,12 @@ async def lifespan(app: FastAPI):
     app.state.notifier = notifier
 
     # Initialize MongoDB client and database
-    mongodb_client = AsyncMongoClient(os.environ["MONGODB_URL"])
+    mongodb_client = AsyncMongoClient(
+        os.environ["MONGO_HOST"],
+        username=os.environ["MONGO_INITDB_ROOT_USERNAME"],
+        password=os.environ["MONGO_INITDB_ROOT_PASSWORD"],
+        authMechanism="SCRAM-SHA-256",
+    )
     database = mongodb_client.peeweare
     monitoring_collection = database.get_collection("monitoring_jobs")
     jobstore_collection = database.get_collection("jobstore")
@@ -56,7 +61,12 @@ async def lifespan(app: FastAPI):
     # Initialize the scheduler and add the MongoDB job store
     scheduler = AsyncIOScheduler()
     jobstore = MongoDBJobStore(
-        client=MongoClient(os.environ["MONGODB_URL"]),
+        client=MongoClient(
+            os.environ["MONGO_HOST"],
+            username=os.environ["MONGO_INITDB_ROOT_USERNAME"],
+            password=os.environ["MONGO_INITDB_ROOT_PASSWORD"],
+            authMechanism="SCRAM-SHA-256",
+        ),
         database="peeweare",
         collection="jobstore",
     )
