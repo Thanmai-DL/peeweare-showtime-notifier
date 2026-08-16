@@ -14,14 +14,15 @@ services:
             - mongodb_config:/data/configdb
     peeweare-showtime-notifier:
         container_name: peeweare-showtime-notifier
-        image: peeweare-showtime-notifier:main
-        build:
-            context: .
+        image: ghcr.io/Thanmai-DL/peeweare-showtime-notifier
         restart: unless-stopped
         environment:
+            - MONGO_HOST=${MONGO_HOST}
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-            - MONGO_HOST=${MONGO_HOST}
+            - NTFY_URL=${NTFY_URL}
+            - NTFY_TOKEN=${NTFY_TOKEN}
+            - JOB_INTERVAL_SECONDS=${JOB_INTERVAL_SECONDS}
         ports:
             - "8000:80"
         depends_on:
