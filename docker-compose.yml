@@ -5,8 +5,8 @@ services:
         image: mongodb/mongodb-community-server:latest-slim
         restart: unless-stopped
         environment:
-            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
         ports:
             - "27017:27017"
         volumes:
@@ -17,7 +17,9 @@ services:
         image: ghcr.io/Thanmai-DL/peeweare-showtime-notifier
         restart: unless-stopped
         environment:
-            - MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017
+            - MONGO_HOST=${MONGO_HOST}
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
             - NTFY_URL=${NTFY_URL}
             - NTFY_TOKEN=${NTFY_TOKEN}
             - JOB_INTERVAL_SECONDS=${JOB_INTERVAL_SECONDS}
