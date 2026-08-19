@@ -40,6 +40,18 @@ class PeeweareAPI:
             ) from e
         return [MoviesShowing(**movie) for movie in data]
 
+    async def _extract_dates(self, data: list[dict]) -> list:
+        """
+        Extract date values from the provided list of dictionaries into a list.
+
+        Args:
+            data (list[dict]): A list of dictionaries containing date information.
+
+        Returns:
+            list: A list of extracted dates.
+        """
+        return [item.get("dt") for item in data]
+
     async def nowshowing(self) -> list[MoviesShowing]:
         """
         Fetch the list of currently showing movies.
@@ -87,32 +99,36 @@ class PeeweareAPI:
         self.movie_id = movie_id
         showtimes = Showtime(shows={})
 
-        response = await self._rest_adapter.post(
-            "/csessions", {"cid": theater_id, "dated": date}
-        )
+        response = await self._rest_adapter.post("/csessions", {"cid": theater_id})
         if response.data["result"] == "success":
-            try:
-                data = response.data["output"]["cinemaMovieSessions"]
-            except TypeError:
-                self._logger.error(
-                    msg="Showtime data is not available: 'output' or 'cinemaMovieSessions' key not found"
+            if date in await self._extract_dates(response.data["output"]["days"]):
+                try:
+                    data = response.data["output"]["cinemaMovieSessions"]
+                except TypeError:
+                    self._logger.error(
+                        msg="Showtime data is not available: 'output' or 'cinemaMovieSessions' key not found"
+                    )
+                    return None
+                except Exception as e:
+                    self._logger.error(msg=str(e))
+                    raise PeeweareException(
+                        f"Error fetching showtimes for movie_id {movie_id} in theater_id {theater_id} on {date}: {e}"
+                    ) from e
+                for session in data:
+                    showtime = CinemaMovieSession(**session)
+                    if str(showtime.movieRe.id) == movie_id:
+                        for exp_session in showtime.experienceSessions:
+                            showtimes.shows[exp_session.experience] = [
+                                f"{show.showTime} ({show.language})"
+                                for show in exp_session.shows
+                            ]
+                return showtimes
+            else:
+                self._logger.warning(
+                    msg=f"Showtimes for {date} in theater_id {theater_id} not updated yet"
                 )
                 return None
-            except Exception as e:
-                self._logger.error(msg=str(e))
-                raise PeeweareException(
-                    f"Error fetching showtimes for movie {movie_id}: {e}"
-                ) from e
-            for session in data:
-                showtime = CinemaMovieSession(**session)
-                if str(showtime.movieRe.id) == movie_id:
-                    for exp_session in showtime.experienceSessions:
-                        showtimes.shows[exp_session.experience] = [
-                            f"{show.showTime} ({show.language})"
-                            for show in exp_session.shows
-                        ]
-            return showtimes
         else:
             raise PeeweareException(
-                f"Failed to fetch showtimes due to API result: {response.data.get('result', 'Unknown error')}"
+                f"Failed to fetch showtimes for movie_id {movie_id} in theater_id {theater_id} on {date} due to API response: {response.data.get('result', 'Unknown error')} with message: {response.data.get('message', 'N/A')}"
             )
