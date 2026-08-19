@@ -1,25 +1,13 @@
 name: peeweare-showtime-notifier
 services:
-    mongodb:
-        container_name: mongodb
-        image: mongodb/mongodb-community-server:latest-slim
-        restart: unless-stopped
-        environment:
-            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-        ports:
-            - "27017:27017"
-        volumes:
-            - mongodb_data:/data/db
-            - mongodb_config:/data/configdb
     peeweare-showtime-notifier:
         container_name: peeweare-showtime-notifier
-        image: ghcr.io/Thanmai-DL/peeweare-showtime-notifier
+        image: ghcr.io/thanmai-dl/peeweare-showtime-notifier:main
         restart: unless-stopped
         environment:
-            - MONGO_HOST=${MONGO_HOST}
-            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+            - MONGODB_HOST=${MONGODB_HOST}
+            - MONGODB_INITDB_ROOT_USERNAME=${MONGODB_INITDB_ROOT_USERNAME}
+            - MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_INITDB_ROOT_PASSWORD}
             - NTFY_URL=${NTFY_URL}
             - NTFY_TOKEN=${NTFY_TOKEN}
             - JOB_INTERVAL_SECONDS=${JOB_INTERVAL_SECONDS}
@@ -27,6 +15,18 @@ services:
             - "8000:80"
         depends_on:
             - mongodb
+    mongodb:
+        container_name: mongodb
+        image: mongodb/mongodb-community-server:8.0-ubi8-slim
+        restart: unless-stopped
+        environment:
+            - MONGODB_INITDB_ROOT_USERNAME=${MONGODB_INITDB_ROOT_USERNAME}
+            - MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_INITDB_ROOT_PASSWORD}
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb_data:/data/db
+            - mongodb_config:/data/configdb
 volumes:
     mongodb_data:
         name: mongodb_data
