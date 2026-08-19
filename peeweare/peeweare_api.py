@@ -8,15 +8,15 @@ from peeweare.rest_adapter import RestAdapter
 class PeeweareAPI:
     def __init__(
         self,
-        hostname: str = "api3.pvrcinemas.com",
-        ver: str = "v1",
+        url: str,
+        headers: dict[str, str],
         ssl_verify: bool = True,
         logger: logging.Logger | None = None,
     ):
         """
         Initialize the PeeweareAPI client.
         """
-        self._rest_adapter = RestAdapter(hostname, ver, ssl_verify, logger)
+        self._rest_adapter = RestAdapter(url, headers, ssl_verify, logger)
         self._logger = logger or logging.getLogger(__name__)
 
     async def _showing(self, endpoint: str, key: str) -> list[MoviesShowing]:
