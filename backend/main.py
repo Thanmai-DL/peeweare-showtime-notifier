@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -29,7 +30,9 @@ async def lifespan(app: FastAPI):
     )
 
     # Initialize PeeweareAPI
-    peeweare_api = PeeweareAPI(logger=logger)
+    peeweare_api = PeeweareAPI(
+        url=os.environ["url"], headers=json.loads(os.environ["headers"]), logger=logger
+    )
     app.state.peeweare_api = peeweare_api
 
     # Initialize Notifier
