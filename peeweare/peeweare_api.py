@@ -106,7 +106,7 @@ class PeeweareAPI:
                     data = response.data["output"]["cinemaMovieSessions"]
                 except TypeError:
                     self._logger.error(
-                        msg="Showtime data is not available: 'output' or 'cinemaMovieSessions' key not found"
+                        msg=f"Showtime data for movie_id {movie_id} in theater_id {theater_id} on {date} is not available: 'output' or 'cinemaMovieSessions' key not found"
                     )
                     return None
                 except Exception as e:
@@ -125,7 +125,7 @@ class PeeweareAPI:
                 return showtimes
             else:
                 self._logger.warning(
-                    msg=f"Showtimes for {date} in theater_id {theater_id} not updated yet"
+                    msg=f"Showtimes for movie_id {movie_id} in theater_id {theater_id} on {date} not updated yet"
                 )
                 return None
         else:

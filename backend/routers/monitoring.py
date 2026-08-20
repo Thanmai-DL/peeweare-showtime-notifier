@@ -38,10 +38,14 @@ async def push_notification(document: dict) -> NotificationsResult:
     try:
         notifier = await bg_assets.notifier
         response = await notifier.push(payload)
-        logger.info(f"Notification sent successfully with message: {response.message}")
+        logger.info(
+            f"Notification sent successfully for movie_id {document['movie_id']} in theater_id {document['theater_id']} on {document['release_date']} with message: {response.message}"
+        )
         return response
     except Exception as e:
-        logger.error(f"Error trying to push notification: {e}")
+        logger.error(
+            f"Error trying to push notification for movie_id {document['movie_id']} in theater_id {document['theater_id']} on {document['release_date']}: {e}"
+        )
         raise PeeweareAppException(f"Error trying to push notification: {e}")
 
 
@@ -57,14 +61,13 @@ async def save_showtimes_to_database(
                 {"movie_id": movie_id}, {"$set": document}
             )
             logger.info(
-                f"Showtimes for movie_id {movie_id} with id {result.upserted_id} updated in db"
+                f"Showtimes for movie_id {movie_id} in theater_id {document['theater_id']} on {document['release_date']} with id {result.upserted_id} updated in db"
             )
-            logger.info("Sending notification")
             await push_notification(document)
     except Exception as e:
-        logger.error(f"Error trying to find document with movie_id ({movie_id}): {e}")
+        logger.error(f"Error trying to find document with movie_id {movie_id}: {e}")
         raise PeeweareAppException(
-            f"Error trying to find document with movie_id ({movie_id}): {e}"
+            f"Error trying to find document with movie_id {movie_id}: {e}"
         )
 
 
@@ -91,7 +94,7 @@ async def get_movie_showtimes(
     response = await peeweare_api.showtimes(movie_id, theater_id, release_date)
     if response is None:
         logger.warning(
-            f"Failed to fetch showtimes for movie_id: {movie_id}, theater_id: {theater_id}, release_date: {release_date}"
+            f"Failed to fetch showtimes for movie_id {movie_id} in theater_id {theater_id} on {release_date}"
         )
         return
     if imax:
@@ -153,7 +156,7 @@ async def add_job_to_database(
     """
     result = await monitoring_collection.insert_one(body.model_dump())
     logger.info(
-        f"Monitoring job for movie_id {body.movie_id} with id {result.inserted_id} added to db"
+        f"Monitoring job for movie_id {body.movie_id} in theater_id {body.theater_id} on {body.release_date} with id {result.inserted_id} added to db"
     )
     return body
 

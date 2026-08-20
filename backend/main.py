@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize PeeweareAPI
     peeweare_api = PeeweareAPI(
-        url=os.environ["url"], headers=json.loads(os.environ["headers"]), logger=logger
+        url=os.environ["url"], headers=json.loads(os.environ["headers"])
     )
     app.state.peeweare_api = peeweare_api
 
