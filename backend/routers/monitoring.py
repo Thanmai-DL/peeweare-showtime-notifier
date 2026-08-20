@@ -180,6 +180,7 @@ async def remove_job_from_database(
         await monitoring_collection.delete_one({"movie_id": movie_id})
         logger.info(f"Monitoring job for movie_id {movie_id} removed from db")
         return job_id
+    logger.warning(f"Monitoring job for movie_id {movie_id} not found in db")
     return None
 
 
@@ -196,8 +197,9 @@ async def remove_job_from_scheduler(
     Returns:
         None
     """
-    scheduler.remove_job(job_id=job_id)
-    logger.info(f"Scheduler job with id {job_id} removed")
+    if job_id is not None:
+        scheduler.remove_job(job_id=job_id)
+        logger.info(f"Scheduler job with id {job_id} removed")
 
 
 # monitoring
