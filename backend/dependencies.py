@@ -22,7 +22,7 @@ class BackgroundAssetRegistry:
         peeweare_api: PeeweareAPI,
         notifier: Notifications,
         scheduler: AsyncIOScheduler,
-    ):
+    ) -> None:
         """Bind live initialized lifespan assets to the container."""
         self._monitoring_collection = monitoring_collection
         self._peeweare_api = peeweare_api
@@ -61,11 +61,11 @@ class BackgroundAssetRegistry:
 bg_assets = BackgroundAssetRegistry()
 
 
-async def get_monitoring_collection(request: Request):
+async def get_monitoring_collection(request: Request) -> Any:
     return request.app.state.monitoring_collection
 
 
-async def get_jobsstore_collection(request: Request):
+async def get_jobsstore_collection(request: Request) -> Any:
     return request.app.state.jobsstore_collection
 
 
