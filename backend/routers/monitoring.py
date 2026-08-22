@@ -54,7 +54,7 @@ async def save_showtimes_to_database(
 ) -> None:
     try:
         document = await monitoring_collection.find_one({"movie_id": movie_id})
-        if document and document["showtimes"] != showtimes:
+        if document and document["updates"] > 0 and document["showtimes"] != showtimes:
             document["showtimes"] = showtimes
             document["updates"] = document["updates"] - 1
             result = await monitoring_collection.update_one(
