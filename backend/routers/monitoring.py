@@ -51,7 +51,7 @@ async def push_notification(document: dict) -> NotificationsResult:
 
 async def save_showtimes_to_database(
     movie_id: str, showtimes: dict, monitoring_collection: Any
-):
+) -> None:
     try:
         document = await monitoring_collection.find_one({"movie_id": movie_id})
         if document and document["showtimes"] != showtimes:
@@ -181,7 +181,7 @@ async def remove_job_from_database(
         logger.info(f"Monitoring job for movie_id {movie_id} removed from db")
         return job_id
     logger.warning(f"Monitoring job for movie_id {movie_id} not found in db")
-    return None
+    return
 
 
 async def remove_job_from_scheduler(
@@ -240,7 +240,6 @@ async def delete_monitoring_job(
     Returns:
         None
     """
-    return
 
 
 @router.get(
