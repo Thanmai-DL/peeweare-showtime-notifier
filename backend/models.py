@@ -71,7 +71,7 @@ class Tags(Enum):
     users = "users"
     movies = "movies"
     monitoring = "monitoring"
-    scheduler = "scheduler"
+    lists = "lists"
 
 
 class FormData(BaseModel):

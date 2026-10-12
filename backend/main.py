@@ -11,12 +11,10 @@ from pymongo import AsyncMongoClient, MongoClient
 
 from backend.dependencies import bg_assets
 from backend.exceptions import PeeweareAppException
-from backend.models import ShowingType, Tags
 from notifications.notifier import Notifications
-from peeweare.models import MoviesShowing
 from peeweare.peeweare_api import PeeweareAPI
 
-from .routers import monitoring
+from .routers import lists, monitoring
 
 load_dotenv()
 
@@ -88,21 +86,4 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(monitoring.router)
-
-
-# movies
-@app.get("/movies/{showing_type}", summary="Get Movies Showing", tags=[Tags.movies])
-async def get_movies_showing(showing_type: ShowingType) -> list[MoviesShowing]:
-    """
-    Get a list of movies based on their showing type.
-
-    Args:
-        showing_type (ShowingType): The type of showing (nowshowing or comingsoon).
-
-    Returns:
-        list[MoviesShowing]: A list of movies based on their showing type.
-    """
-    if showing_type == ShowingType.nowshowing:
-        return await app.state.peeweare_api.nowshowing()
-    elif showing_type == ShowingType.comingsoon:
-        return await app.state.peeweare_api.comingsoon()
+app.include_router(lists.router)
