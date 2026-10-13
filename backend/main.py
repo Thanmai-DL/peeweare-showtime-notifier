@@ -7,6 +7,7 @@ from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from mcp.server.transport_security import TransportSecuritySettings
 from pymongo import AsyncMongoClient, MongoClient
 
 from backend.dependencies import bg_assets
@@ -105,5 +106,6 @@ app = FastAPI(
 app.include_router(monitoring.router)
 app.include_router(lists.router)
 
-mcp_app = mcp.streamable_http_app()
+security = TransportSecuritySettings(allowed_hosts=[os.environ.get("allowed_hosts")])
+mcp_app = mcp.streamable_http_app(transport_security=security)
 app.mount("/", mcp_app)
