@@ -13,6 +13,7 @@ services:
             - JOB_INTERVAL_SECONDS=${JOB_INTERVAL_SECONDS}
             - URL=${URL}
             - HEADERS=${HEADERS}
+            - PSN_API_BASE=${PSN_API_BASE}
         ports:
             - "8000:80"
         depends_on:
