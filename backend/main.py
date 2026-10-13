@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -11,6 +11,7 @@ from pymongo import AsyncMongoClient, MongoClient
 
 from backend.dependencies import bg_assets
 from backend.exceptions import PeeweareAppException
+from mcp_server.server import mcp
 from notifications.notifier import Notifications
 from peeweare.peeweare_api import PeeweareAPI
 
@@ -20,7 +21,7 @@ load_dotenv()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def api_lifespan(app: FastAPI):
     # Initialze Logger
     logger = logging.getLogger(__name__)
     logging.basicConfig(
@@ -84,6 +85,25 @@ async def lifespan(app: FastAPI):
     await mongodb_client.close()
 
 
-app = FastAPI(lifespan=lifespan)
+@asynccontextmanager
+async def mcp_lifespan(app: FastAPI):
+    async with mcp.session_manager.run():
+        yield
+
+
+@asynccontextmanager
+async def combined_lifespan(app: FastAPI):
+    async with AsyncExitStack() as stack:
+        await stack.enter_async_context(api_lifespan(app))
+        await stack.enter_async_context(mcp_lifespan(app))
+        yield
+
+
+app = FastAPI(
+    title="Peeweare Showtime Notifier API with MCP", lifespan=combined_lifespan
+)
 app.include_router(monitoring.router)
 app.include_router(lists.router)
+
+mcp_app = mcp.streamable_http_app()
+app.mount("/", mcp_app)
