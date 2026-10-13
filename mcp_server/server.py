@@ -1,5 +1,7 @@
 import logging
+import os
 
+from dotenv import load_dotenv
 from httpx2 import AsyncClient, HTTPStatusError, Response
 from mcp.server import MCPServer
 
@@ -11,7 +13,8 @@ logging.basicConfig(level=logging.INFO)
 mcp = MCPServer("Peeweare Showtime Notifier MCP")
 
 # Constants
-PSN_API_BASE = "http://127.0.0.1:8000"
+load_dotenv()
+PSN_API_BASE = os.environ.get("PSN_API_BASE")
 USER_AGENT = "peeweare_showtime_notifier/1.0"
 
 
