@@ -106,6 +106,7 @@ app = FastAPI(
 app.include_router(monitoring.router)
 app.include_router(lists.router)
 
-security = TransportSecuritySettings(allowed_hosts=[os.environ.get("allowed_hosts")])
+allowed_hosts = json.loads(os.environ.get("ALLOWED_HOSTS", "[]"))
+security = TransportSecuritySettings(allowed_hosts=allowed_hosts)
 mcp_app = mcp.streamable_http_app(transport_security=security)
 app.mount("/", mcp_app)
